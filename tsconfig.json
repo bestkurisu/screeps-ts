@@ -1,19 +1,35 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "lib": ["es2018"],
+    "lib": [
+      "es2018"
+    ],
     "target": "es2018",
     "moduleResolution": "Node",
     "outDir": "dist",
-    "baseUrl": "src/",
+    "baseUrl": "./",
     "sourceMap": true,
+    "removeComments": true,
     "strict": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
-    "allowUnreachableCode": false
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "allowUnreachableCode": false,
+    "noImplicitThis": false,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@test/*": [
+        "./test/*"
+      ]
+    },
+    "exclude": [
+      "node_modules"
+    ],
+    "include": [
+      "./src/",
+      "./test/"
+    ]
+  }
 }
