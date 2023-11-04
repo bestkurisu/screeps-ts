@@ -6,8 +6,6 @@ export enum Color {
   Gray
 }
 
-const BASE_COLOR = "#cccccc";
-const TEXT_COLOR = "#e9e9e9";
 /**
  * 在绘制控制台信息时使用的颜色
  */
