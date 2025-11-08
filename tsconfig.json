@@ -16,6 +16,7 @@
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "noImplicitThis": false,
+    "types": ["node", "chai", "mocha", "screeps", "lodash", "vitest/globals"],
     "paths": {
       "@/*": [
         "./src/*"
@@ -23,13 +24,13 @@
       "@test/*": [
         "./test/*"
       ]
-    },
-    "exclude": [
-      "node_modules"
-    ],
-    "include": [
-      "./src/",
-      "./test/"
-    ]
-  }
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "./src/",
+    "./test/"
+  ]
 }

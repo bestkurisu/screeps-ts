@@ -79,7 +79,7 @@ const sourceMappedStackTrace = function(error: Error | string): string {
  * @param next 玩家代码
  * @param args
  */
-export const errorMapper: ErrorCatcher = function(next: any, ...args: (Room | Creep | PowerCreep | unknown[])[]) {
+export const errorMapper: ErrorCatcher = function(next: any, ...args: unknown[]) {
   try {
     // 执行玩家代码
     next(...args);

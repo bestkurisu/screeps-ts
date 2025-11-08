@@ -1,0 +1,197 @@
+# Cursor Rules for Screeps TypeScript Bot
+
+## 项目概述
+这是一个 Screeps 游戏的 TypeScript 脚本项目。Screeps 是一个实时策略游戏，脚本在游戏服务器上运行，有严格的 CPU 时间限制（通常每个 tick 只有 20-30 CPU）。因此，代码必须高度优化，避免阻塞，并确保错误不会导致脚本崩溃。
+
+## 核心原则
+
+### 1. 性能优先
+- **最小化 CPU 使用**：每个操作都应该考虑 CPU 成本
+- **避免不必要的循环**：使用缓存和记忆化来减少重复计算
+- **限制嵌套深度**：避免过深的函数调用和条件嵌套（建议不超过 5 层）
+- **减少对象创建**：重用对象，避免在循环中创建新对象
+- **使用高效的数据结构**：优先使用 Map/Set 而不是对象数组查找
+
+### 2. 错误处理
+- **永远不要抛出未捕获的错误**：所有可能失败的操作都应该用 try-catch 包裹
+- **使用 errorMapper**：框架提供的错误映射器会自动捕获并记录错误
+- **优雅降级**：当操作失败时，应该继续执行其他逻辑，而不是崩溃
+- **避免阻塞操作**：不要使用同步 I/O 或长时间运行的操作
+
+### 3. 代码质量
+- **类型安全**：充分利用 TypeScript 的类型系统，但避免过度复杂的类型
+- **清晰的命名**：使用描述性的变量和函数名
+- **模块化**：将功能拆分为小的、可测试的模块
+- **注释关键逻辑**：特别是性能敏感的部分
+
+## 代码规范
+
+### 性能优化模式
+
+```typescript
+// ✅ 好的做法：使用缓存
+const cachedResult = Memory.cache?.[key] || expensiveCalculation();
+Memory.cache = Memory.cache || {};
+Memory.cache[key] = cachedResult;
+
+// ❌ 避免：每次都重新计算
+const result = expensiveCalculation(); // 在循环中会消耗大量 CPU
+
+// ✅ 好的做法：提前退出循环
+for (const creep of creeps) {
+  if (creep.spawning) continue; // 跳过不需要处理的对象
+  // 处理逻辑
+}
+
+// ❌ 避免：不必要的嵌套循环
+for (const room of rooms) {
+  for (const creep of creeps) {
+    if (creep.room === room) { // 低效的查找
+      // 处理逻辑
+    }
+  }
+}
+```
+
+### 错误处理模式
+
+```typescript
+// ✅ 好的做法：使用 errorMapper 包裹可能失败的操作
+errorMapper(() => {
+  // 可能失败的操作
+  creep.moveTo(target);
+});
+
+// ✅ 好的做法：检查对象是否存在
+if (creep && creep.store.getFreeCapacity() > 0) {
+  creep.harvest(source);
+}
+
+// ❌ 避免：直接访问可能不存在的属性
+creep.store.getFreeCapacity(); // 如果 creep 不存在会崩溃
+```
+
+### 内存管理
+
+```typescript
+// ✅ 好的做法：定期清理不需要的数据
+if (Game.time % 100 === 0) {
+  // 清理旧缓存
+  Memory.oldData = undefined;
+}
+
+// ✅ 好的做法：限制 Memory 大小
+if (Object.keys(Memory.creeps).length > 100) {
+  // 清理死亡的 creep 记录
+  for (const name in Memory.creeps) {
+    if (!Game.creeps[name]) {
+      delete Memory.creeps[name];
+    }
+  }
+}
+```
+
+## 测试规范
+
+### 单元测试
+- 所有工具函数都应该有单元测试
+- 使用 vitest 进行测试
+- 测试文件应该放在 `test/` 目录下，命名为 `*.test.ts`
+- Mock Screeps 全局对象（Game, Memory 等）
+
+### 测试示例
+
+```typescript
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+describe("模块名称", () => {
+  beforeEach(() => {
+    // 重置全局状态
+  });
+
+  it("应该正确执行功能", () => {
+    // 测试逻辑
+    expect(result).toBe(expected);
+  });
+});
+```
+
+## 禁止的做法
+
+1. **不要使用同步阻塞操作**
+   - ❌ `fs.readFileSync()`
+   - ❌ `require('fs').readFileSync()`
+   - ✅ 使用异步操作或避免文件系统操作
+
+2. **不要在循环中创建对象**
+   - ❌ `for (let i = 0; i < 100; i++) { const obj = {}; }`
+   - ✅ 在循环外创建并重用对象
+
+3. **不要深度嵌套**
+   - ❌ 超过 5 层的 if/for 嵌套
+   - ✅ 提取函数，使用早期返回
+
+4. **不要忽略错误**
+   - ❌ `creep.moveTo(target);` （可能失败）
+   - ✅ `errorMapper(() => creep.moveTo(target));`
+
+5. **不要使用未定义的变量**
+   - ❌ 直接访问可能不存在的属性
+   - ✅ 先检查存在性
+
+## 代码审查检查清单
+
+在提交代码前，确保：
+- [ ] 所有可能失败的操作都有错误处理
+- [ ] 没有不必要的循环或嵌套
+- [ ] 使用了缓存来避免重复计算
+- [ ] 代码通过了 ESLint 检查
+- [ ] 新增的功能有对应的测试
+- [ ] 没有创建不必要的临时对象
+- [ ] Memory 使用合理，定期清理
+
+## 性能监控
+
+- 使用框架提供的 `collectCost` 函数来监控 CPU 使用
+- 定期检查 `Game.cpu.getUsed()` 确保不超过限制
+- 使用 `switchShowCost` 来调试性能瓶颈
+
+## 文件组织
+
+- `src/` - 源代码
+  - `Creep/` - Creep 相关逻辑
+  - `Room/` - Room 相关逻辑
+  - `utils/` - 工具函数
+    - `framework/` - 框架核心代码
+- `test/` - 测试文件
+- 配置文件在根目录
+
+## 导入规范
+
+- 使用路径别名 `@/` 来导入源代码
+- 使用路径别名 `@test/` 来导入测试工具
+- 按以下顺序组织导入：
+  1. 外部依赖
+  2. 内部模块（使用 `@/`）
+  3. 相对路径导入
+
+## 注释规范
+
+- 使用 JSDoc 注释描述公共 API
+- 在性能敏感的地方添加注释说明为什么这样实现
+- 在复杂的算法处添加注释解释逻辑
+
+## 类型定义
+
+- 充分利用 TypeScript 类型系统
+- 为复杂的数据结构定义接口
+- 使用类型别名提高可读性
+- 避免过度使用 `any`，必要时使用 `unknown`
+
+## 调试技巧
+
+- 使用 `console.log` 进行调试（Screeps 环境支持）
+- 使用 `Game.cpu.getUsed()` 监控 CPU 使用
+- 使用框架的 CPU 成本收集功能
+- 在测试环境中使用 vitest 的调试功能
+

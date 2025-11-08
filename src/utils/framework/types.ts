@@ -80,6 +80,6 @@ export interface CreateOptions {
 
 declare global {
   interface Memory {
-    [appName: string]: boolean; // bot 是否已经触发过 born 阶段
+    [appName: string]: any; // bot 是否已经触发过 born 阶段（使用 any 以兼容 screeps 原有类型）
   }
 }
